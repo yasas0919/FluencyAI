@@ -72,23 +72,53 @@ object NativeCallData {
         ),
         NativeCallScenario(
             id = "call_job_interview",
-            title = "Executive Job Interview Phone Screen",
+            title = "Job Interview Phone Screen",
             category = "Career",
-            description = "A preliminary phone screening with a senior hiring manager. Highlight your strengths and past projects.",
+            description = "A preliminary phone screening with a senior hiring manager. Highlight your strengths, past projects, and answer behavioral questions.",
             aiRole = "Lead Hiring Manager",
             userRole = "Senior Candidate",
-            initialGreeting = "Hello! Thanks for taking the time to speak with me today. To kick things off, could you give me a brief overview of your background?",
+            initialGreeting = "Hello! Thanks for taking the time to speak with me today. To kick things off, could you give me a brief overview of your background and experience?",
             suggestedTopics = listOf("Previous technical experience", "Handling a tight project deadline", "Long-term career aspirations")
         ),
         NativeCallScenario(
             id = "call_immigration_travel",
-            title = "Airport Customs & Border Interview",
+            title = "Travelling & Airport Customs",
             category = "Travel",
             description = "Answer direct questions from a border officer regarding your travel itinerary, accommodation, and purpose of visit.",
             aiRole = "Border Protection Officer",
             userRole = "Incoming International Traveler",
-            initialGreeting = "Good morning. May I ask what the primary purpose of your trip is, and how long you plan to stay?",
-            suggestedTopics = listOf("Hotel reservation and itinerary", "Conference attendance", "Return flight details")
+            initialGreeting = "Good morning. May I inspect your passport, please? What is the primary purpose of your trip, and how long do you plan to stay?",
+            suggestedTopics = listOf("Hotel reservation and itinerary", "Conference attendance details", "Return flight confirmation")
+        ),
+        NativeCallScenario(
+            id = "call_medical_clinic",
+            title = "Medical Clinic Consultation",
+            category = "Health",
+            description = "Consult with an attentive doctor about your physical symptoms, medical history, and treatment recovery plan.",
+            aiRole = "Attending Physician",
+            userRole = "Patient",
+            initialGreeting = "Hello, thanks for calling in to the clinic. I see you're not feeling at your best today. Can you walk me through the symptoms you've been experiencing?",
+            suggestedTopics = listOf("Onset and severity of symptoms", "Prescription and allergy history", "Recovery and dosage guidelines")
+        ),
+        NativeCallScenario(
+            id = "call_networking",
+            title = "Professional Networking Mixer",
+            category = "Networking",
+            description = "Connect with an industry peer at a networking reception. Introduce your background, discuss trends, and exchange ideas.",
+            aiRole = "Senior Industry Peer",
+            userRole = "Networking Attendee",
+            initialGreeting = "Hey there! Really great turnout at the mixer tonight, isn't it? What kind of work or projects are you currently focused on?",
+            suggestedTopics = listOf("Current industry projects", "Exciting tech developments", "Collaborative partnerships")
+        ),
+        NativeCallScenario(
+            id = "call_coffee_catchup",
+            title = "Coffee Shop & Casual Talk",
+            category = "Social",
+            description = "Ring up your native English friend to catch up on recent travels, weekend hobbies, and upcoming plans.",
+            aiRole = "Close Native Friend",
+            userRole = "Friend catching up",
+            initialGreeting = "Hey there! It's so great to hear from you. How has your week been going so far?",
+            suggestedTopics = listOf("Weekend road trip", "A great new podcast or book", "Upcoming holiday plans")
         ),
         NativeCallScenario(
             id = "call_startup_pitch",

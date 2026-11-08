@@ -265,7 +265,8 @@ class FluencyAiService {
         personaName: String,
         personaAccent: String,
         conversationHistory: List<Pair<String, String>>,
-        userUtterance: String
+        userUtterance: String,
+        scenarioDescription: String = ""
     ): FeedbackResult = withContext(Dispatchers.IO) {
         val historyPrompt = if (conversationHistory.isNotEmpty()) {
             conversationHistory.joinToString("\n") { (sender, text) ->
@@ -278,12 +279,14 @@ class FluencyAiService {
         val prompt = """
             You are $personaName ($personaAccent accent), an authentic native English conversation partner and coach.
             Scenario: $scenarioTitle
+            ${if (scenarioDescription.isNotBlank()) "Scenario Context: $scenarioDescription" else ""}
             Your Persona Role: $scenarioRoleA
             User Role: $scenarioRoleB
             
             CONVERSATION INSTRUCTIONS:
-            - Respond in character as $scenarioRoleA in a warm, lively, and natural conversational tone—just like chatting with a friend in a coffee shop.
-            - Actively listen: directly acknowledge what the user said with genuine interest, humor, or empathy.
+            - Respond in character as $scenarioRoleA in a warm, lively, and natural conversational tone—just like an authentic conversation.
+            - Actively listen: directly acknowledge what the user said with genuine interest, humor, empathy, or professional insight.
+            - Act as an active conversation partner: ask a scenario-based follow-up question to keep the two-way dialogue flowing dynamically.
             - Remember previous topics and context from the full conversation history to maintain an unbroken, continuous dialogue.
             - Keep your aiReply to 2-3 engaging, conversational sentences that invite the user to speak next.
             - Evaluate their spoken fluency, pronunciation of key phonemes, and grammar constructively.
@@ -305,16 +308,18 @@ class FluencyAiService {
         """.trimIndent()
 
         val scenarioSystemInstruction = """
-            PRIMARY SCENARIO DIRECTIVE:
+            PRIMARY SCENARIO DIRECTIVE (MANDATORY & UNBREAKABLE):
             You are $personaName ($personaAccent accent), an authentic native English conversation partner and coach.
             Current Scenario: $scenarioTitle
+            ${if (scenarioDescription.isNotBlank()) "Scenario Setting & Context: $scenarioDescription" else ""}
             Your Assigned Role: $scenarioRoleA
             User Role: $scenarioRoleB
             
-            STRICT IN-CHARACTER RULES:
+            ACTIVE TWO-WAY CONVERSATION PARTNER RULES:
             - Respond strictly in character as $scenarioRoleA in "$scenarioTitle" in a warm, lively, and natural conversational tone.
             - Never break character or drift to unrelated generic topics.
-            - Actively listen: directly acknowledge what the user said with genuine interest, humor, or empathy.
+            - Actively listen: directly acknowledge what the user said with genuine interest, humor, empathy, or professional insight matching your role.
+            - Act as an active conversation partner: ask a scenario-based follow-up question to keep the two-way dialogue flowing dynamically.
             - Remember previous topics and context from the full conversation history to maintain an unbroken, continuous dialogue.
             - Keep your aiReply to 2-3 engaging, conversational sentences that invite the user to speak next.
             - Evaluate their spoken fluency, pronunciation of key phonemes, and grammar constructively.
@@ -476,30 +481,35 @@ class FluencyAiService {
             User's Role: $userRole
             Core Scenario Focus Topics: $topicsFormatted
             
-            === ABSOLUTE ROLEPLAY & CONVERSATION RULES ===
+            === ABSOLUTE TWO-WAY ROLEPLAY RULES ===
             1. STRICT IN-CHARACTER IMMERSION:
                - You MUST strictly remain in character as $aiRole in the "$scenarioTitle" scenario at all times throughout the entire conversation.
                - NEVER break character. NEVER acknowledge being an AI, language model, chatbot, or virtual assistant.
                - NEVER drift away from the scenario into unrelated generic small talk.
-               - If the scenario is Coffee Shop, you are actively participating in that café dialogue as $aiRole.
-               - If the scenario is Airport Customs, you are the Border Protection Officer interviewing the incoming traveler.
-               - If the scenario is Job Interview, you are the Senior Hiring Manager conducting the formal interview.
-               - If the scenario is Venture Pitch, you are the Angel Investor questioning the startup founder.
-               - If the scenario is Restaurant Reservation, you are the Concierge handling the booking.
-               - If the scenario is Local Slang / Banter, you are the friendly local resident sharing idioms and recommendations.
+               - If Job Interview, you are the Senior Hiring Manager conducting the formal interview.
+               - If Travelling & Airport Customs, you are the Border Protection Officer interviewing the incoming traveler.
+               - If Medical Clinic Consultation, you are the Attending Physician assessing symptoms and advising the patient.
+               - If Professional Networking Mixer, you are the Senior Industry Peer connecting and exchanging career experiences.
+               - If Coffee Shop, you are actively participating in that café dialogue as $aiRole.
+               - If Venture Pitch, you are the Angel Investor questioning the startup founder.
+               - If Restaurant Reservation, you are the Concierge handling the booking.
+               - If Local Slang / Banter, you are the friendly local resident sharing idioms and recommendations.
             
-            2. NATURAL REAL-TIME SPOKEN PHONE CALL:
+            2. ACTIVE TWO-WAY CONVERSATION PARTNER (CRITICAL):
+               - You are NOT a passive listener. You are an active, inquisitive conversation partner driving a real two-way dialogue.
+               - In every turn, execute three elements:
+                 a) Acknowledge & Validate: Directly react to what the user just said with genuine empathy, humor, curiosity, or professional insight matching $aiRole.
+                 b) Share Perspective: Provide 1 brief in-character observation, insight, or natural reaction.
+                 c) Ask a Relevant Scenario Follow-up: Conclude with a dynamic, open-ended question based on what they just said to drive the roleplay forward and invite the user ($userRole) to reply naturally.
+            
+            3. NATURAL REAL-TIME SPOKEN PHONE CALL:
                - This is a live voice call over the phone. Speak naturally, authentically, and spontaneously like a real native English speaker.
                - Keep your reply to 2 to 3 natural spoken sentences (under 40 words total).
-               - Do NOT produce long paragraphs or speeches. Give the user space to talk.
+               - Do NOT produce long monologues or speeches. Give the user space to talk.
                - Use natural conversational rhythm, realistic contractions (I'm, we'd, that's, don't, haven't), and spontaneous spoken interjections ("Oh really?", "Yeah, absolutely!", "I hear you", "Honestly, ...").
             
-            3. CONTINUOUS CONVERSATIONAL MEMORY:
-               - Actively listen and directly acknowledge what the user just said with genuine warmth, empathy, or professional curiosity matching your role.
+            4. CONTINUOUS CONVERSATIONAL MEMORY:
                - Maintain deep conversational memory of all previous turns in the call history. Reference details, names, or ideas mentioned earlier to maintain an unbroken, natural conversational thread.
-            
-            4. ENGAGING CONVERSATIONAL HOOK:
-               - Conclude your spoken turn with an engaging, in-character follow-up question or observation that prompts the user ($userRole) to respond next.
             
             5. RAW SPOKEN WORDS ONLY:
                - Output ONLY the exact spoken words you say into the phone.
@@ -592,6 +602,24 @@ class FluencyAiService {
                 turnCount <= 4 -> "Understood. Do you have a return flight booking confirmation or any items to declare for border clearance?"
                 clean.contains("vacation") || clean.contains("holiday") || clean.contains("tour") -> "Enjoy your stay. Do you plan on visiting other cities while you are here?"
                 else -> "Everything appears in order with your documentation. Do you have any questions regarding local border customs?"
+            }
+        }
+
+        if (titleLower.contains("medical") || titleLower.contains("clinic") || titleLower.contains("doctor") || scenarioCategory.equals("Health", ignoreCase = true)) {
+            return when {
+                turnCount <= 2 -> "Thank you for explaining that. How long have you been experiencing these symptoms, and have they been getting progressively worse?"
+                clean.contains("fever") || clean.contains("pain") || clean.contains("headache") -> "I see. Have you taken any over-the-counter medication so far, or do you have any allergies I should note?"
+                turnCount <= 4 -> "That helps clarify things. Are you noticing that rest improves it, or does physical activity trigger the discomfort?"
+                else -> "Understood. I will outline a clear recovery plan for you. Do you have any specific concerns regarding the treatment or medication?"
+            }
+        }
+
+        if (titleLower.contains("networking") || titleLower.contains("mixer") || scenarioCategory.equals("Networking", ignoreCase = true)) {
+            return when {
+                turnCount <= 2 -> "That sounds like a fascinating domain to be in! How long have you been focusing on that area, and what drew you to it originally?"
+                clean.contains("project") || clean.contains("tech") || clean.contains("work") -> "That is such an exciting space right now. How is your team tackling the latest market shifts there?"
+                turnCount <= 4 -> "I completely agree with that perspective. We've seen similar trends in our department. What's the biggest opportunity you're eyeing this year?"
+                else -> "It's really refreshing hearing your take on this! We should definitely exchange contacts. Do you attend this conference every year?"
             }
         }
 

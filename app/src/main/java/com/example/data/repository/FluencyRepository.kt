@@ -77,7 +77,8 @@ class FluencyRepository(
             personaName = persona.name,
             personaAccent = persona.accent,
             conversationHistory = historyPairs,
-            userUtterance = userUtterance
+            userUtterance = userUtterance,
+            scenarioDescription = scenario.description
         )
 
         val pronJson = JSONArray().apply {
