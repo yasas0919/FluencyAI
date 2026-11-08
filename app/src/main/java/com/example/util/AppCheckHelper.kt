@@ -28,8 +28,9 @@ private var isConfigured = false
 fun configureAppCheck(context: Context, intent: Intent?) {
     try {
         // 1. Ensure FirebaseApp is initialized
-        if (FirebaseApp.getApps(context).isEmpty()) {
-            FirebaseApp.initializeApp(context)
+        if (!ensureFirebaseInitialized(context) || FirebaseApp.getApps(context).isEmpty()) {
+            Log.w(TAG, "Cannot configure App Check: FirebaseApp could not be initialized.")
+            return
         }
 
         val firebaseApp = FirebaseApp.getInstance()
@@ -83,8 +84,8 @@ fun configureAppCheck(context: Context, intent: Intent?) {
  */
 fun getAppCheckDebugToken(context: Context): String? {
     return try {
-        if (FirebaseApp.getApps(context).isEmpty()) {
-            FirebaseApp.initializeApp(context)
+        if (!ensureFirebaseInitialized(context) || FirebaseApp.getApps(context).isEmpty()) {
+            return null
         }
         val persistenceKey = FirebaseApp.getInstance().persistenceKey
         val prefs = context.getSharedPreferences(

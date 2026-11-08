@@ -11,10 +11,14 @@ import com.example.ui.navigation.AppNavigation
 import com.example.ui.theme.FluencyAiTheme
 import com.example.ui.theme.Slate950
 import com.example.util.configureAppCheck
+import com.example.util.ensureFirebaseInitialized
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Ensure Firebase is initialized as early as possible before any operations
+        ensureFirebaseInitialized(this)
 
         // Mandated App Check wiring with launch intent before any UI or Firebase operations
         configureAppCheck(this, intent)
