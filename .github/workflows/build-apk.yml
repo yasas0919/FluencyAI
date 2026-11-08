@@ -24,7 +24,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug -x validateSigningDebug -Pksp.enabled=false
+        run: ./gradlew assembleDebug -x validateSigningDebug -Pksp.enabled=false --no-configuration-cache
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
