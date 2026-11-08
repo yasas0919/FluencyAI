@@ -31,8 +31,10 @@ import com.example.ui.screens.ConversationScreen
 import com.example.ui.screens.DailyReadingScreen
 import com.example.ui.screens.DrillScreen
 import com.example.ui.screens.HomeScreen
+import com.example.ui.screens.NativeVoiceCallScreen
 import com.example.ui.screens.PresentationScreen
 import com.example.ui.screens.ProgressScreen
+import com.example.ui.screens.TongueTwisterScreen
 import com.example.ui.theme.CyanNeon
 import com.example.ui.theme.EmeraldGreen
 import com.example.ui.theme.Slate400
@@ -43,7 +45,9 @@ import com.example.ui.viewmodel.BookReadingViewModel
 import com.example.ui.viewmodel.ConversationViewModel
 import com.example.ui.viewmodel.DrillViewModel
 import com.example.ui.viewmodel.HomeViewModel
+import com.example.ui.viewmodel.NativeVoiceCallViewModel
 import com.example.ui.viewmodel.PresentationViewModel
+import com.example.ui.viewmodel.TongueTwisterViewModel
 import com.example.ui.viewmodel.VocabularyViewModel
 
 enum class NavTab {
@@ -54,6 +58,13 @@ enum class NavTab {
     PROGRESS
 }
 
+enum class ActiveScreen {
+    MAIN_DASHBOARD,
+    CONVERSATION,
+    TONGUE_TWISTERS,
+    NATIVE_CALL
+}
+
 @Composable
 fun AppNavigation(
     conversationViewModel: ConversationViewModel = viewModel(),
@@ -61,181 +72,218 @@ fun AppNavigation(
     homeViewModel: HomeViewModel = viewModel(),
     vocabularyViewModel: VocabularyViewModel = viewModel(),
     presentationViewModel: PresentationViewModel = viewModel(),
-    bookReadingViewModel: BookReadingViewModel = viewModel()
+    bookReadingViewModel: BookReadingViewModel = viewModel(),
+    tongueTwisterViewModel: TongueTwisterViewModel = viewModel(),
+    nativeVoiceCallViewModel: NativeVoiceCallViewModel = viewModel()
 ) {
     var currentTab by remember { mutableStateOf(NavTab.SCENARIOS) }
-    var inConversationScreen by remember { mutableStateOf(false) }
+    var activeScreen by remember { mutableStateOf(ActiveScreen.MAIN_DASHBOARD) }
 
-    if (inConversationScreen) {
-        BackHandler {
-            inConversationScreen = false
-        }
-        ConversationScreen(
-            viewModel = conversationViewModel,
-            onBack = { inConversationScreen = false }
-        )
-    } else {
-        if (currentTab != NavTab.SCENARIOS) {
+    when (activeScreen) {
+        ActiveScreen.CONVERSATION -> {
             BackHandler {
-                currentTab = NavTab.SCENARIOS
+                activeScreen = ActiveScreen.MAIN_DASHBOARD
             }
+            ConversationScreen(
+                viewModel = conversationViewModel,
+                onBack = { activeScreen = ActiveScreen.MAIN_DASHBOARD }
+            )
         }
 
-        Scaffold(
-            bottomBar = {
-                NavigationBar(
-                    containerColor = Slate900,
-                    contentColor = Color.White,
-                    tonalElevation = androidx.compose.ui.unit.Dp(0f),
-                    modifier = Modifier
-                        .testTag("main_bottom_nav")
-                ) {
-                    NavigationBarItem(
-                        selected = currentTab == NavTab.SCENARIOS,
-                        onClick = { currentTab = NavTab.SCENARIOS },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Forum,
-                                contentDescription = "Scenarios"
-                            )
-                        },
-                        label = { Text("Speak", fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Slate950,
-                            selectedTextColor = CyanNeon,
-                            indicatorColor = CyanNeon,
-                            unselectedIconColor = Slate400,
-                            unselectedTextColor = Slate400
-                        ),
-                        modifier = Modifier.testTag("tab_scenarios")
-                    )
+        ActiveScreen.TONGUE_TWISTERS -> {
+            BackHandler {
+                activeScreen = ActiveScreen.MAIN_DASHBOARD
+            }
+            TongueTwisterScreen(
+                viewModel = tongueTwisterViewModel,
+                onBack = { activeScreen = ActiveScreen.MAIN_DASHBOARD }
+            )
+        }
 
-                    NavigationBarItem(
-                        selected = currentTab == NavTab.PRESENTATION,
-                        onClick = { currentTab = NavTab.PRESENTATION },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.CoPresent,
-                                contentDescription = "AI Presentation"
-                            )
-                        },
-                        label = { Text("Present", fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Slate950,
-                            selectedTextColor = VioletNeon,
-                            indicatorColor = VioletNeon,
-                            unselectedIconColor = Slate400,
-                            unselectedTextColor = Slate400
-                        ),
-                        modifier = Modifier.testTag("tab_presentation")
-                    )
+        ActiveScreen.NATIVE_CALL -> {
+            BackHandler {
+                activeScreen = ActiveScreen.MAIN_DASHBOARD
+            }
+            NativeVoiceCallScreen(
+                viewModel = nativeVoiceCallViewModel,
+                onBack = { activeScreen = ActiveScreen.MAIN_DASHBOARD }
+            )
+        }
 
-                    NavigationBarItem(
-                        selected = currentTab == NavTab.BOOK_READING,
-                        onClick = { currentTab = NavTab.BOOK_READING },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.AutoStories,
-                                contentDescription = "Daily Reading"
-                            )
-                        },
-                        label = { Text("Read", fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Slate950,
-                            selectedTextColor = EmeraldGreen,
-                            indicatorColor = EmeraldGreen,
-                            unselectedIconColor = Slate400,
-                            unselectedTextColor = Slate400
-                        ),
-                        modifier = Modifier.testTag("tab_reading")
-                    )
-
-                    NavigationBarItem(
-                        selected = currentTab == NavTab.DRILL_LAB,
-                        onClick = { currentTab = NavTab.DRILL_LAB },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.RecordVoiceOver,
-                                contentDescription = "Drill Lab"
-                            )
-                        },
-                        label = { Text("Drills", fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Slate950,
-                            selectedTextColor = CyanNeon,
-                            indicatorColor = CyanNeon,
-                            unselectedIconColor = Slate400,
-                            unselectedTextColor = Slate400
-                        ),
-                        modifier = Modifier.testTag("tab_drill_lab")
-                    )
-
-                    NavigationBarItem(
-                        selected = currentTab == NavTab.PROGRESS,
-                        onClick = { currentTab = NavTab.PROGRESS },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.TrendingUp,
-                                contentDescription = "Progress"
-                            )
-                        },
-                        label = { Text("Progress", fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Slate950,
-                            selectedTextColor = CyanNeon,
-                            indicatorColor = CyanNeon,
-                            unselectedIconColor = Slate400,
-                            unselectedTextColor = Slate400
-                        ),
-                        modifier = Modifier.testTag("tab_progress")
-                    )
+        ActiveScreen.MAIN_DASHBOARD -> {
+            if (currentTab != NavTab.SCENARIOS) {
+                BackHandler {
+                    currentTab = NavTab.SCENARIOS
                 }
-            },
-            containerColor = Slate950
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                when (currentTab) {
-                    NavTab.SCENARIOS -> {
-                        HomeScreen(
-                            homeViewModel = homeViewModel,
-                            onStartScenario = { scenario, persona ->
-                                conversationViewModel.startSession(scenario, persona)
-                                inConversationScreen = true
+            }
+
+            Scaffold(
+                bottomBar = {
+                    NavigationBar(
+                        containerColor = Slate900,
+                        contentColor = Color.White,
+                        tonalElevation = androidx.compose.ui.unit.Dp(0f),
+                        modifier = Modifier
+                            .testTag("main_bottom_nav")
+                    ) {
+                        NavigationBarItem(
+                            selected = currentTab == NavTab.SCENARIOS,
+                            onClick = { currentTab = NavTab.SCENARIOS },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Forum,
+                                    contentDescription = "Scenarios"
+                                )
                             },
-                            onResumeConversation = { convId, scenario, persona ->
-                                conversationViewModel.resumeSession(convId, scenario, persona)
-                                inConversationScreen = true
+                            label = { Text("Speak", fontSize = 10.sp) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Slate950,
+                                selectedTextColor = CyanNeon,
+                                indicatorColor = CyanNeon,
+                                unselectedIconColor = Slate400,
+                                unselectedTextColor = Slate400
+                            ),
+                            modifier = Modifier.testTag("tab_scenarios")
+                        )
+
+                        NavigationBarItem(
+                            selected = currentTab == NavTab.PRESENTATION,
+                            onClick = { currentTab = NavTab.PRESENTATION },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.CoPresent,
+                                    contentDescription = "AI Presentation"
+                                )
                             },
-                            onNavigateToPresentation = {
-                                currentTab = NavTab.PRESENTATION
+                            label = { Text("Present", fontSize = 10.sp) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Slate950,
+                                selectedTextColor = VioletNeon,
+                                indicatorColor = VioletNeon,
+                                unselectedIconColor = Slate400,
+                                unselectedTextColor = Slate400
+                            ),
+                            modifier = Modifier.testTag("tab_presentation")
+                        )
+
+                        NavigationBarItem(
+                            selected = currentTab == NavTab.BOOK_READING,
+                            onClick = { currentTab = NavTab.BOOK_READING },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.AutoStories,
+                                    contentDescription = "Daily Reading"
+                                )
                             },
-                            onNavigateToReading = {
-                                currentTab = NavTab.BOOK_READING
-                            }
+                            label = { Text("Read", fontSize = 10.sp) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Slate950,
+                                selectedTextColor = EmeraldGreen,
+                                indicatorColor = EmeraldGreen,
+                                unselectedIconColor = Slate400,
+                                unselectedTextColor = Slate400
+                            ),
+                            modifier = Modifier.testTag("tab_reading")
+                        )
+
+                        NavigationBarItem(
+                            selected = currentTab == NavTab.DRILL_LAB,
+                            onClick = { currentTab = NavTab.DRILL_LAB },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.RecordVoiceOver,
+                                    contentDescription = "Drill Lab"
+                                )
+                            },
+                            label = { Text("Drills", fontSize = 10.sp) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Slate950,
+                                selectedTextColor = CyanNeon,
+                                indicatorColor = CyanNeon,
+                                unselectedIconColor = Slate400,
+                                unselectedTextColor = Slate400
+                            ),
+                            modifier = Modifier.testTag("tab_drill_lab")
+                        )
+
+                        NavigationBarItem(
+                            selected = currentTab == NavTab.PROGRESS,
+                            onClick = { currentTab = NavTab.PROGRESS },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.TrendingUp,
+                                    contentDescription = "Progress"
+                                )
+                            },
+                            label = { Text("Progress", fontSize = 10.sp) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Slate950,
+                                selectedTextColor = CyanNeon,
+                                indicatorColor = CyanNeon,
+                                unselectedIconColor = Slate400,
+                                unselectedTextColor = Slate400
+                            ),
+                            modifier = Modifier.testTag("tab_progress")
                         )
                     }
+                },
+                containerColor = Slate950
+            ) { innerPadding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                ) {
+                    when (currentTab) {
+                        NavTab.SCENARIOS -> {
+                            HomeScreen(
+                                homeViewModel = homeViewModel,
+                                onStartScenario = { scenario, persona ->
+                                    conversationViewModel.startSession(scenario, persona)
+                                    activeScreen = ActiveScreen.CONVERSATION
+                                },
+                                onResumeConversation = { convId, scenario, persona ->
+                                    conversationViewModel.resumeSession(convId, scenario, persona)
+                                    activeScreen = ActiveScreen.CONVERSATION
+                                },
+                                onNavigateToPresentation = {
+                                    currentTab = NavTab.PRESENTATION
+                                },
+                                onNavigateToReading = {
+                                    currentTab = NavTab.BOOK_READING
+                                },
+                                onNavigateToTongueTwisters = {
+                                    activeScreen = ActiveScreen.TONGUE_TWISTERS
+                                },
+                                onNavigateToNativeCall = {
+                                    activeScreen = ActiveScreen.NATIVE_CALL
+                                }
+                            )
+                        }
 
-                    NavTab.PRESENTATION -> {
-                        PresentationScreen(viewModel = presentationViewModel)
-                    }
+                        NavTab.PRESENTATION -> {
+                            PresentationScreen(viewModel = presentationViewModel)
+                        }
 
-                    NavTab.BOOK_READING -> {
-                        DailyReadingScreen(viewModel = bookReadingViewModel)
-                    }
+                        NavTab.BOOK_READING -> {
+                            DailyReadingScreen(viewModel = bookReadingViewModel)
+                        }
 
-                    NavTab.DRILL_LAB -> {
-                        DrillScreen(viewModel = drillViewModel)
-                    }
+                        NavTab.DRILL_LAB -> {
+                            DrillScreen(
+                                viewModel = drillViewModel,
+                                onNavigateToTongueTwisters = {
+                                    activeScreen = ActiveScreen.TONGUE_TWISTERS
+                                }
+                            )
+                        }
 
-                    NavTab.PROGRESS -> {
-                        ProgressScreen(
-                            homeViewModel = homeViewModel,
-                            vocabularyViewModel = vocabularyViewModel
-                        )
+                        NavTab.PROGRESS -> {
+                            ProgressScreen(
+                                homeViewModel = homeViewModel,
+                                vocabularyViewModel = vocabularyViewModel
+                            )
+                        }
                     }
                 }
             }

@@ -94,7 +94,8 @@ import com.example.util.SpeechState
 
 @Composable
 fun DrillScreen(
-    viewModel: DrillViewModel
+    viewModel: DrillViewModel,
+    onNavigateToTongueTwisters: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val drills = viewModel.drills
@@ -151,10 +152,68 @@ fun DrillScreen(
                         color = Color.White
                     )
                     Text(
-                        text = "Master tricky English phonemes & tongue twisters",
+                        text = "Master tricky English phonemes & articulation",
                         style = MaterialTheme.typography.bodySmall,
                         color = Slate400
                     )
+                }
+            }
+        }
+
+        if (onNavigateToTongueTwisters != null) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToTongueTwisters() }
+                        .testTag("drill_to_twisters_banner"),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Slate900),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(AmberWarning.copy(alpha = 0.5f))
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "⚡", fontSize = 22.sp)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "Tongue Twisters Agility Lab",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "Take on 4 difficulty levels with live WPM speed analysis",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Slate400,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                        Surface(
+                            color = AmberWarning,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "Open",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Slate950,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+                    }
                 }
             }
         }

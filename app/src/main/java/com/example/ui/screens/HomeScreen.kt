@@ -76,6 +76,8 @@ import com.example.ui.viewmodel.HomeViewModel
 
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.CoPresent
+import androidx.compose.material.icons.filled.PhoneInTalk
+import androidx.compose.material.icons.filled.Speed
 
 @Composable
 fun HomeScreen(
@@ -83,7 +85,9 @@ fun HomeScreen(
     onStartScenario: (Scenario, AiPersona) -> Unit,
     onResumeConversation: (Long, Scenario, AiPersona) -> Unit,
     onNavigateToPresentation: () -> Unit,
-    onNavigateToReading: () -> Unit
+    onNavigateToReading: () -> Unit,
+    onNavigateToTongueTwisters: () -> Unit,
+    onNavigateToNativeCall: () -> Unit
 ) {
     val stats by homeViewModel.stats.collectAsState()
     val conversations by homeViewModel.conversations.collectAsState()
@@ -408,6 +412,202 @@ fun HomeScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Start Daily Reading",
+                                color = Slate950,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // Feature A: Tongue Twisters Card (Standalone Pronunciation Drills)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToTongueTwisters() }
+                        .testTag("launch_tongue_twisters_card"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Slate900),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(AmberWarning.copy(alpha = 0.6f))
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                color = AmberWarning.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "TONGUE TWISTERS AGILITY",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AmberWarning,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                            Text(
+                                text = "WPM Speedometer • 4 Levels",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = AmberWarning,
+                                fontSize = 11.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(AmberWarning.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Speed,
+                                    contentDescription = null,
+                                    tint = AmberWarning,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Pronunciation Agility & Speed Drills",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "Master challenging English consonants with real-time speech word highlighting and reading speed analysis.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Slate400,
+                                    lineHeight = 17.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Button(
+                            onClick = onNavigateToTongueTwisters,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("start_tongue_twisters_btn"),
+                            colors = ButtonDefaults.buttonColors(containerColor = AmberWarning),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                tint = Slate950,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Start Tongue Twisters Challenge",
+                                color = Slate950,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                // Feature B: Native Speaker Practice Card (Standalone AI Voice Call)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToNativeCall() }
+                        .testTag("launch_native_call_card"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Slate900),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(CyanNeon.copy(alpha = 0.6f))
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                color = CyanNeon.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "NATIVE SPEAKER PRACTICE",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = CyanNeon,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                            Text(
+                                text = "🇺🇸 US • 🇬🇧 UK • 🇦🇺 AUS",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = CyanAccent,
+                                fontSize = 11.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(CircleShape)
+                                    .background(CyanNeon.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PhoneInTalk,
+                                    contentDescription = null,
+                                    tint = CyanNeon,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Live Conversational Voice Call",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "Simulated real-time phone call with live audio waveform, multiple scenarios, and accent-switching practice.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Slate400,
+                                    lineHeight = 17.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Button(
+                            onClick = onNavigateToNativeCall,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("start_native_call_btn"),
+                            colors = ButtonDefaults.buttonColors(containerColor = CyanNeon),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhoneInTalk,
+                                contentDescription = null,
+                                tint = Slate950,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Call Native Speaker Now",
                                 color = Slate950,
                                 fontWeight = FontWeight.Bold
                             )

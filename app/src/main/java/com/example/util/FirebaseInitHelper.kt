@@ -16,11 +16,11 @@ object FirebaseInitHelper {
     private const val TAG = "FirebaseInitHelper"
 
     // Configuration values corresponding to google-services.json
-    private const val DEFAULT_APP_ID = "1:490709905363:android:ac4afc0650184143554926"
-    private const val DEFAULT_API_KEY = "AIzaSyAfT5z_2nJzt48ztgEhtSh0_2KysloqFVI"
-    private const val DEFAULT_PROJECT_ID = "gen-lang-client-0505836829"
-    private const val DEFAULT_STORAGE_BUCKET = "gen-lang-client-0505836829.firebasestorage.app"
-    private const val DEFAULT_SENDER_ID = "490709905363"
+    private const val DEFAULT_APP_ID = "1:20087024680:android:87b72c14b9e68338e0991d"
+    private const val DEFAULT_API_KEY = "AIzaSyCI0Am3ah9X54bQwrk63F5oFMnzIkucsDA"
+    private const val DEFAULT_PROJECT_ID = "fluencyai-6704f"
+    private const val DEFAULT_STORAGE_BUCKET = "fluencyai-6704f.firebasestorage.app"
+    private const val DEFAULT_SENDER_ID = "20087024680"
 
     @Volatile
     private var isInitialized = false

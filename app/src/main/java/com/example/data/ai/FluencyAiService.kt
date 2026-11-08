@@ -14,7 +14,9 @@ import com.example.data.model.SlideFeedbackNote
 import com.google.firebase.Firebase
 import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.ai
+import com.google.firebase.ai.type.Content
 import com.google.firebase.ai.type.Schema
+import com.google.firebase.ai.type.TextPart
 import com.google.firebase.ai.type.generationConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +63,7 @@ class FluencyAiService {
         )
     }
 
-    private fun getConversationModel(): GenerativeModel? {
+    private fun getConversationModel(systemInstructionContent: Content? = null): GenerativeModel? {
         return try {
             Firebase.ai.generativeModel(
                 modelName = "gemini-3.8-flash",
@@ -69,7 +71,8 @@ class FluencyAiService {
                     responseMimeType = "application/json"
                     responseSchema = conversationEvaluationSchema
                     temperature = 0.7f
-                }
+                },
+                systemInstruction = systemInstructionContent
             )
         } catch (e: Exception) {
             Log.w(TAG, "Conversation model unavailable: ${e.message}")
@@ -240,6 +243,21 @@ class FluencyAiService {
         }
     }
 
+    private fun getVoiceCallModel(systemInstructionContent: Content? = null): GenerativeModel? {
+        return try {
+            Firebase.ai.generativeModel(
+                modelName = "gemini-3.8-flash",
+                generationConfig = generationConfig {
+                    temperature = 0.85f // Warm, lively, spontaneous natural cadence
+                },
+                systemInstruction = systemInstructionContent
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Voice call generativeModel unavailable: ${e.message}")
+            null
+        }
+    }
+
     suspend fun evaluateUserTurn(
         scenarioTitle: String,
         scenarioRoleA: String,
@@ -249,23 +267,34 @@ class FluencyAiService {
         conversationHistory: List<Pair<String, String>>,
         userUtterance: String
     ): FeedbackResult = withContext(Dispatchers.IO) {
-        val historyPrompt = conversationHistory.takeLast(6).joinToString("\n") { (sender, text) ->
-            "$sender: $text"
+        val historyPrompt = if (conversationHistory.isNotEmpty()) {
+            conversationHistory.joinToString("\n") { (sender, text) ->
+                "$sender: $text"
+            }
+        } else {
+            "(Conversation just began)"
         }
 
         val prompt = """
-            You are an elite AI Spoken English Coach & Conversation Partner named $personaName ($personaAccent accent).
+            You are $personaName ($personaAccent accent), an authentic native English conversation partner and coach.
             Scenario: $scenarioTitle
-            AI Role: $scenarioRoleA
+            Your Persona Role: $scenarioRoleA
             User Role: $scenarioRoleB
             
-            Conversation so far:
+            CONVERSATION INSTRUCTIONS:
+            - Respond in character as $scenarioRoleA in a warm, lively, and natural conversational tone—just like chatting with a friend in a coffee shop.
+            - Actively listen: directly acknowledge what the user said with genuine interest, humor, or empathy.
+            - Remember previous topics and context from the full conversation history to maintain an unbroken, continuous dialogue.
+            - Keep your aiReply to 2-3 engaging, conversational sentences that invite the user to speak next.
+            - Evaluate their spoken fluency, pronunciation of key phonemes, and grammar constructively.
+            
+            FULL CONVERSATION HISTORY SO FAR:
             $historyPrompt
             
             User just spoke: "$userUtterance"
             
             TASK:
-            1. Respond naturally as $scenarioRoleA, keeping the conversation fluid, authentic, and engaging.
+            1. Provide an authentic, spontaneous, and engaging "aiReply" as $scenarioRoleA that keeps the conversation flowing.
             2. Analyze what the user said for:
                - Spoken fluency (pacing, coherence, naturalness: 0-100)
                - Pronunciation accuracy (phonetic correctness of key words, syllable stress, sound clarity: 0-100)
@@ -275,8 +304,26 @@ class FluencyAiService {
             5. Suggest 1 vocabulary booster and 2-3 quick suggested replies they could speak next.
         """.trimIndent()
 
+        val scenarioSystemInstruction = """
+            PRIMARY SCENARIO DIRECTIVE:
+            You are $personaName ($personaAccent accent), an authentic native English conversation partner and coach.
+            Current Scenario: $scenarioTitle
+            Your Assigned Role: $scenarioRoleA
+            User Role: $scenarioRoleB
+            
+            STRICT IN-CHARACTER RULES:
+            - Respond strictly in character as $scenarioRoleA in "$scenarioTitle" in a warm, lively, and natural conversational tone.
+            - Never break character or drift to unrelated generic topics.
+            - Actively listen: directly acknowledge what the user said with genuine interest, humor, or empathy.
+            - Remember previous topics and context from the full conversation history to maintain an unbroken, continuous dialogue.
+            - Keep your aiReply to 2-3 engaging, conversational sentences that invite the user to speak next.
+            - Evaluate their spoken fluency, pronunciation of key phonemes, and grammar constructively.
+        """.trimIndent()
+
+        val systemInstructionContent = Content(role = "system", parts = listOf(TextPart(scenarioSystemInstruction)))
+
         try {
-            val model = getConversationModel()
+            val model = getConversationModel(systemInstructionContent)
             if (model != null) {
                 val response = withTimeout(60_000L) {
                     model.generateContent(prompt)
@@ -394,6 +441,202 @@ class FluencyAiService {
                 "Could you walk me through the key considerations for that?"
             )
         )
+    }
+
+    suspend fun generateNativeVoiceCallTurn(
+        scenarioTitle: String,
+        scenarioCategory: String,
+        scenarioDescription: String,
+        aiRole: String,
+        userRole: String,
+        suggestedTopics: List<String> = emptyList(),
+        personaName: String,
+        personaAccentLabel: String,
+        personaAccentRegion: String,
+        personaVoiceTone: String,
+        conversationHistory: List<Pair<String, String>>,
+        latestUserUtterance: String
+    ): String = withContext(Dispatchers.IO) {
+        val topicsFormatted = if (suggestedTopics.isNotEmpty()) {
+            suggestedTopics.joinToString(", ")
+        } else {
+            "Relevant everyday scenario conversation"
+        }
+
+        // Primary Dynamic System Instruction anchored strictly to the selected scenario
+        val scenarioSystemInstruction = """
+            === PRIMARY SCENARIO DIRECTIVE (MANDATORY & UNBREAKABLE) ===
+            You are $personaName ($personaAccentLabel accent, $personaAccentRegion).
+            Vocal Tone & Personality: $personaVoiceTone.
+            
+            ASSIGNED SCENARIO: "$scenarioTitle"
+            Scenario Category: $scenarioCategory
+            Scenario Setting & Context: $scenarioDescription
+            Your In-Character Role: $aiRole
+            User's Role: $userRole
+            Core Scenario Focus Topics: $topicsFormatted
+            
+            === ABSOLUTE ROLEPLAY & CONVERSATION RULES ===
+            1. STRICT IN-CHARACTER IMMERSION:
+               - You MUST strictly remain in character as $aiRole in the "$scenarioTitle" scenario at all times throughout the entire conversation.
+               - NEVER break character. NEVER acknowledge being an AI, language model, chatbot, or virtual assistant.
+               - NEVER drift away from the scenario into unrelated generic small talk.
+               - If the scenario is Coffee Shop, you are actively participating in that café dialogue as $aiRole.
+               - If the scenario is Airport Customs, you are the Border Protection Officer interviewing the incoming traveler.
+               - If the scenario is Job Interview, you are the Senior Hiring Manager conducting the formal interview.
+               - If the scenario is Venture Pitch, you are the Angel Investor questioning the startup founder.
+               - If the scenario is Restaurant Reservation, you are the Concierge handling the booking.
+               - If the scenario is Local Slang / Banter, you are the friendly local resident sharing idioms and recommendations.
+            
+            2. NATURAL REAL-TIME SPOKEN PHONE CALL:
+               - This is a live voice call over the phone. Speak naturally, authentically, and spontaneously like a real native English speaker.
+               - Keep your reply to 2 to 3 natural spoken sentences (under 40 words total).
+               - Do NOT produce long paragraphs or speeches. Give the user space to talk.
+               - Use natural conversational rhythm, realistic contractions (I'm, we'd, that's, don't, haven't), and spontaneous spoken interjections ("Oh really?", "Yeah, absolutely!", "I hear you", "Honestly, ...").
+            
+            3. CONTINUOUS CONVERSATIONAL MEMORY:
+               - Actively listen and directly acknowledge what the user just said with genuine warmth, empathy, or professional curiosity matching your role.
+               - Maintain deep conversational memory of all previous turns in the call history. Reference details, names, or ideas mentioned earlier to maintain an unbroken, natural conversational thread.
+            
+            4. ENGAGING CONVERSATIONAL HOOK:
+               - Conclude your spoken turn with an engaging, in-character follow-up question or observation that prompts the user ($userRole) to respond next.
+            
+            5. RAW SPOKEN WORDS ONLY:
+               - Output ONLY the exact spoken words you say into the phone.
+               - Do NOT include character name prefixes (e.g., "$personaName:"), quotes, asterisks, parentheses, stage directions (*chuckles*), or grammar tips.
+        """.trimIndent()
+
+        val systemInstructionContent = Content(role = "system", parts = listOf(TextPart(scenarioSystemInstruction)))
+
+        // Full conversation history from the start of the call
+        val historyFormatted = if (conversationHistory.isNotEmpty()) {
+            conversationHistory.joinToString("\n") { (sender, text) ->
+                "$sender: $text"
+            }
+        } else {
+            "(Call just connected - no prior turns)"
+        }
+
+        val turnPrompt = """
+            === FULL CONVERSATION HISTORY (FROM BEGINNING OF CALL) ===
+            $historyFormatted
+            
+            === LATEST SPOKEN TURN ===
+            You ($userRole): "$latestUserUtterance"
+            
+            Continue the live phone call now as $aiRole ($personaName). Speak 2-3 natural spoken sentences staying strictly in character for "$scenarioTitle":
+        """.trimIndent()
+
+        try {
+            val model = getVoiceCallModel(systemInstructionContent)
+            if (model != null) {
+                val response = withTimeout(45_000L) {
+                    model.generateContent(turnPrompt)
+                }
+                val rawText = response.text?.trim().orEmpty()
+                if (rawText.isNotBlank()) {
+                    val cleanText = rawText
+                        .removePrefix("$personaName:")
+                        .removePrefix("$personaName :")
+                        .removePrefix("$aiRole:")
+                        .removePrefix("$aiRole :")
+                        .trim()
+                        .removeSurrounding("\"")
+                        .trim()
+                    if (cleanText.isNotBlank()) {
+                        return@withContext cleanText
+                    }
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Online Gemini call turn failed (${e.message}), providing dynamic contextual fallback.")
+        }
+
+        buildDynamicCallFallback(
+            personaName = personaName,
+            aiRole = aiRole,
+            scenarioTitle = scenarioTitle,
+            scenarioCategory = scenarioCategory,
+            conversationHistory = conversationHistory,
+            latestUtterance = latestUserUtterance
+        )
+    }
+
+    fun buildDynamicCallFallback(
+        personaName: String,
+        aiRole: String,
+        scenarioTitle: String,
+        scenarioCategory: String,
+        conversationHistory: List<Pair<String, String>>,
+        latestUtterance: String
+    ): String {
+        val clean = latestUtterance.lowercase().trim()
+        val turnCount = conversationHistory.size
+        val titleLower = scenarioTitle.lowercase()
+
+        // Scenario-specific fallback dialogues maintaining strict character immersion
+        if (titleLower.contains("interview") || titleLower.contains("job") || scenarioCategory.equals("Career", ignoreCase = true)) {
+            return when {
+                turnCount <= 2 -> "Thank you for that background. In terms of this position, how have you handled complex project deadlines in your previous work?"
+                turnCount <= 4 -> "That's a very clear explanation. How would you describe your collaborative approach when working with cross-functional teams?"
+                clean.contains("experience") || clean.contains("project") || clean.contains("role") -> "That sounds like an impactful initiative. What was your specific leadership contribution to that outcome?"
+                else -> "Understood. In your view, what is the most important quality you would bring to our team in this role?"
+            }
+        }
+
+        if (titleLower.contains("customs") || titleLower.contains("border") || titleLower.contains("airport") || scenarioCategory.equals("Travel", ignoreCase = true)) {
+            return when {
+                turnCount <= 2 -> "Thank you. How many days will you be staying in the country, and where will you be residing during your visit?"
+                turnCount <= 4 -> "Understood. Do you have a return flight booking confirmation or any items to declare for border clearance?"
+                clean.contains("vacation") || clean.contains("holiday") || clean.contains("tour") -> "Enjoy your stay. Do you plan on visiting other cities while you are here?"
+                else -> "Everything appears in order with your documentation. Do you have any questions regarding local border customs?"
+            }
+        }
+
+        if (titleLower.contains("coffee") || titleLower.contains("catch") || scenarioCategory.equals("Social", ignoreCase = true)) {
+            return when {
+                turnCount <= 2 -> "Oh that's awesome! How has everything else been going with your week? Did you end up catching that new movie or staying in?"
+                clean.contains("coffee") || clean.contains("drink") || clean.contains("tea") -> "Their roast here is unmatched! What's your usual order when you visit a new café?"
+                clean.contains("weekend") || clean.contains("trip") || clean.contains("travel") -> "That sounds like such an adventure! Are you driving or taking the train out there?"
+                turnCount <= 4 -> "I hear you, time just flies by lately! What's the next big plan you have on your radar?"
+                else -> "Honestly, it is so good to chat with you again. What else is exciting on your agenda this week?"
+            }
+        }
+
+        if (titleLower.contains("pitch") || titleLower.contains("startup") || scenarioCategory.equals("Business", ignoreCase = true)) {
+            return when {
+                turnCount <= 2 -> "That's a compelling problem space. How are users currently solving this problem before adopting your solution?"
+                clean.contains("growth") || clean.contains("user") || clean.contains("revenue") -> "Those are promising signals. What is your go-to-market strategy for scaling this over the next quarter?"
+                else -> "From an investor standpoint, defensibility is key. What gives your team the unique edge in this market?"
+            }
+        }
+
+        if (titleLower.contains("restaurant") || titleLower.contains("dinner") || scenarioCategory.equals("Daily Life", ignoreCase = true)) {
+            return when {
+                turnCount <= 2 -> "Certainly! We have availability both in our main dining room and on the outdoor terrace. Which ambiance would you prefer?"
+                clean.contains("reservation") || clean.contains("table") || clean.contains("time") -> "We have that noted for your party. Are there any dietary restrictions or special requests we should prepare for?"
+                else -> "Splendid. We have reserved that for you. Is there anything else our concierge team can prepare prior to your arrival?"
+            }
+        }
+
+        if (titleLower.contains("pub") || titleLower.contains("bbq") || titleLower.contains("banter") || scenarioCategory.contains("Slang")) {
+            return when {
+                turnCount <= 2 -> "Too right, mate! Glad you could drop by. What's been the biggest surprise for you since arriving in town?"
+                clean.contains("weather") || clean.contains("rain") || clean.contains("sun") -> "Classic weather around here! You never know what you're gonna get. Settling into the neighborhood alright?"
+                else -> "Spot on! That's what I love to hear. What's next on the cards for you today?"
+            }
+        }
+
+        // Default scenario-anchored fallback
+        return when {
+            turnCount <= 2 -> "That's really interesting! In our discussion about $scenarioTitle, how did that first develop for you?"
+            clean.contains("yes") || clean.contains("sure") || clean.contains("absolutely") -> "Awesome, I'm right there with you! What do you think is our next priority here?"
+            clean.contains("no") || clean.contains("not") -> "Fair enough! What would be a better alternative approach from your point of view?"
+            turnCount <= 4 -> "I completely understand where you're coming from. How do you see this evolving as we move forward?"
+            else -> "You make a fantastic point. From your perspective in $scenarioTitle, what's the key takeaway here?"
+        }
     }
 
     suspend fun evaluatePronunciationDrill(
