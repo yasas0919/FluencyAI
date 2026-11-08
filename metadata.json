@@ -1,0 +1,6 @@
+{
+  "name": "FluencyAI: Speak English",
+  "description": "Master conversational English fluency through real-time AI speech feedback, real-time conversation partner, and instant personalized pronunciation corrections.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
